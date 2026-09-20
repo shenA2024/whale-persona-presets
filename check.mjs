@@ -40,15 +40,22 @@ t('ALL', '至少有内容（不是空跑）', list.length > 0)
 
 // 隐私层（2026-09-20 维护者的红线）：本仓是**公开**的 —— 只放通用内容，
 // 不许出现维护者的私人标识（人名 / 关系 / 私有工作目录）。词表拆开写 + 跳过本文件，避免自命中。
+// 词表一律用字符码拼（与引擎侧 S14 同一套教训）：**拆分不等于消除** —— 写成 ['某','某'].join('')
+// 文件里照样是那两个字；再把本文件排除掉，它就成了唯一漏网的那个（引擎侧 2026-09-20 踩过一次，
+// 这边同一坑又踩一次，所以两处现在都是字符码 + 不跳过自己）。
+const fromCode = (codes) => String.fromCharCode.apply(null, codes)
 const PRIVATE = [
-  ['鲸', '鱼', '姐', '姐'].join(''),
-  ['徐', '石'].join(''),
-  ['DS', '与', '<maintainer>'].join(''),
-  ['Ti', 'Shi', 'Ci'].join(''),
-  ['Warm', 'stone'].join(''),
-  [String.fromCharCode(51, 51, 53, 48, 51)].join(''), // 本机用户名片段
+  fromCode([0x9cb8, 0x9c7c, 0x59d0, 0x59d0]),                 // 人设名
+  fromCode([0x5f90, 0x77f3]),                                  // 姓名（笔名）
+  fromCode([0x59bb, 0x5b50]),                                  // 关系词 ×4
+  fromCode([0x5f1f, 0x5f1f]),
+  fromCode([0x5b69, 0x5b50]),
+  fromCode([0x59d0, 0x59d0]),
+  fromCode([0x5988, 0x5988]),
+  fromCode([0x54, 0x69, 0x53, 0x68, 0x69, 0x43, 0x69]),        // 私有库
+  fromCode([0x57, 0x61, 0x72, 0x6d, 0x73, 0x74, 0x6f, 0x6e, 0x65]), // 私有项目
+  fromCode([0x33, 0x33, 0x35, 0x30, 0x33]),                    // 本机用户名片段
 ]
-const SELF = path.basename(fileURLToPath(import.meta.url))
 function walkText(dir, acc) {
   const out = acc || []
   for (const name of readdirSync(dir)) {
@@ -61,7 +68,6 @@ function walkText(dir, acc) {
 }
 const privHits = []
 for (const p of walkText(ROOT, [])) {
-  if (path.basename(p) === SELF) continue
   const txt = readFileSync(p, 'utf8')
   for (const pat of PRIVATE) if (txt.includes(pat)) privHits.push(path.relative(ROOT, p) + ' <- ' + pat)
 }
