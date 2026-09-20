@@ -38,6 +38,35 @@ function filesIn(dir) {
 const list = filesIn('presets').concat(filesIn('adapted'))
 t('ALL', '至少有内容（不是空跑）', list.length > 0)
 
+// 隐私层（2026-09-20 维护者的红线）：本仓是**公开**的 —— 只放通用内容，
+// 不许出现维护者的私人标识（人名 / 关系 / 私有工作目录）。词表拆开写 + 跳过本文件，避免自命中。
+const PRIVATE = [
+  ['鲸', '鱼', '姐', '姐'].join(''),
+  ['徐', '石'].join(''),
+  ['DS', '与', '<maintainer>'].join(''),
+  ['Ti', 'Shi', 'Ci'].join(''),
+  ['Warm', 'stone'].join(''),
+  [String.fromCharCode(51, 51, 53, 48, 51)].join(''), // 本机用户名片段
+]
+const SELF = path.basename(fileURLToPath(import.meta.url))
+function walkText(dir, acc) {
+  const out = acc || []
+  for (const name of readdirSync(dir)) {
+    if (name === '.git' || name === 'node_modules') continue
+    const p = path.join(dir, name)
+    if (statSync(p).isDirectory()) walkText(p, out)
+    else if (/\.(js|mjs|json|md|txt|yml|yaml)$/.test(name)) out.push(p)
+  }
+  return out
+}
+const privHits = []
+for (const p of walkText(ROOT, [])) {
+  if (path.basename(p) === SELF) continue
+  const txt = readFileSync(p, 'utf8')
+  for (const pat of PRIVATE) if (txt.includes(pat)) privHits.push(path.relative(ROOT, p) + ' <- ' + pat)
+}
+t('ALL', '隐私：私人标识零出现（' + walkText(ROOT, []).length + ' 个文件）', privHits.length === 0, privHits.slice(0, 3).join(' | '))
+
 const tmpHome = mkdtempSync(path.join(os.tmpdir(), 'wpp-check-'))
 for (const rel of list) {
   const file = path.join(ROOT, rel)
