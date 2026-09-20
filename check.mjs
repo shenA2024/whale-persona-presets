@@ -11,13 +11,43 @@
  * 退出码非 0 = 有失败。
  */
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
-const HARNESS = process.env.WHALE_HARNESS || 'D:/Tool/src/whale-persona'
+
+/**
+ * 引擎（harness）在哪 —— 刻意**不写死任何本机路径**（本仓是公开仓，写死维护者的目录等于泄漏本机布局；
+ * 2026-09-21 第三方走读指出 S14 词表管不到"工具默认值"这类泄漏，这里改成三级解析）：
+ *   ① 环境变量 WHALE_HARNESS
+ *   ② 第一个参数 --harness <path>
+ *   ③ 已安装的插件（$DSH_HOME/profiles/<profile>/node_modules/@shenA2024/whale-persona）
+ * 三级都拿不到 → 直接失败并打印怎么给，绝不猜。
+ */
+function resolveHarness() {
+  const i = process.argv.indexOf('--harness')
+  if (i >= 0 && process.argv[i + 1]) return path.resolve(process.argv[i + 1])
+  if (process.env.WHALE_HARNESS) return path.resolve(process.env.WHALE_HARNESS)
+  const home = process.env.DSH_HOME || path.join(os.homedir(), '.dsh')
+  const profiles = path.join(home, 'profiles')
+  try {
+    for (const p of readdirSync(profiles)) {
+      const cand = path.join(profiles, p, 'node_modules', '@shenA2024', 'whale-persona')
+      if (existsSync(path.join(cand, 'scripts', 'presets.mjs'))) return cand
+    }
+  } catch { /* 没装或读不到 */ }
+  return ''
+}
+const HARNESS = resolveHarness()
+if (!HARNESS) {
+  console.error('找不到 whale-persona 引擎。三种给法任选：')
+  console.error('  WHALE_HARNESS=/path/to/whale-persona node check.mjs')
+  console.error('  node check.mjs --harness /path/to/whale-persona')
+  console.error('  或先把插件装进 DSH（$DSH_HOME/profiles/*/node_modules/@shenA2024/whale-persona）')
+  process.exit(2)
+}
 const SPEC = 'whale-persona-preset/1'
 const MAX_CONTRACT = 120
 

@@ -54,10 +54,13 @@ check.mjs   自检：结构 + 契约长度 + **用真引擎导入一遍**（决�
 ## 自检
 
 ```bash
-node check.mjs                       # 默认找 D:/Tool/src/whale-persona 作为引擎
-WHALE_HARNESS=/path/to/whale-persona node check.mjs   # 引擎在别处时指定
+node check.mjs                                        # 自动找已安装的引擎
+WHALE_HARNESS=/path/to/whale-persona node check.mjs   # 或显式指定引擎在哪
+node check.mjs --harness /path/to/whale-persona       # 同上，参数形式
 ```
 
+引擎路径三级解析：`WHALE_HARNESS` 环境变量 → `--harness` 参数 → 已安装插件
+（`$DSH_HOME/profiles/*/node_modules/@shenA2024/whale-persona`）；三级都拿不到就明确报错，不猜。
 自检会真的调用引擎的 `scripts/presets.mjs import`（在临时 DSH_HOME 里跑，不碰你的配置）。
 **没跑过自检的卡不入库** —— "看起来对"不算数。
 
