@@ -23,7 +23,8 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url))
  * 2026-09-21 第三方走读指出 S14 词表管不到"工具默认值"这类泄漏，这里改成三级解析）：
  *   ① 环境变量 WHALE_HARNESS
  *   ② 第一个参数 --harness <path>
- *   ③ 已安装的插件（$DSH_HOME/profiles/<profile>/node_modules/@shenA2024/whale-persona）
+ *   ③ 已安装的插件（$DSH_HOME/profiles/<profile>/node_modules/whale-persona；
+ *      0.15.0 之前的包名是 @shenA2024/whale-persona，两个都认）
  * 三级都拿不到 → 直接失败并打印怎么给，绝不猜。
  */
 function resolveHarness() {
@@ -33,9 +34,16 @@ function resolveHarness() {
   const home = process.env.DSH_HOME || path.join(os.homedir(), '.dsh')
   const profiles = path.join(home, 'profiles')
   try {
+    // 引擎 0.15.0 起包名去掉了 scope（npm 不收大写包名）；旧安装仍留在 @shenA2024/ 下，两个都认。
+    const rels = [
+      path.join('node_modules', 'whale-persona'),
+      path.join('node_modules', '@shenA2024', 'whale-persona'),
+    ]
     for (const p of readdirSync(profiles)) {
-      const cand = path.join(profiles, p, 'node_modules', '@shenA2024', 'whale-persona')
-      if (existsSync(path.join(cand, 'scripts', 'presets.mjs'))) return cand
+      for (const rel of rels) {
+        const cand = path.join(profiles, p, rel)
+        if (existsSync(path.join(cand, 'scripts', 'presets.mjs'))) return cand
+      }
     }
   } catch { /* 没装或读不到 */ }
   return ''
@@ -45,7 +53,7 @@ if (!HARNESS) {
   console.error('找不到 whale-persona 引擎。三种给法任选：')
   console.error('  WHALE_HARNESS=/path/to/whale-persona node check.mjs')
   console.error('  node check.mjs --harness /path/to/whale-persona')
-  console.error('  或先把插件装进 DSH（$DSH_HOME/profiles/*/node_modules/@shenA2024/whale-persona）')
+  console.error('  或先把插件装进 DSH（$DSH_HOME/profiles/*/node_modules/whale-persona）')
   process.exit(2)
 }
 const SPEC = 'whale-persona-preset/1'
