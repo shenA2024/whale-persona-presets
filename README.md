@@ -40,7 +40,9 @@ node <本体仓>/scripts/presets.mjs apply starter-plus   # 应用（应用前�
 引擎/内容仓是公开的，"我们自己的独特配置"（人设正文、长期记忆、私有路径）只留在本机，
 永远不进这两个仓。这条不是口头约定：`check.mjs` 里有机器判据（词表在源码里拆开写，扫全部文件）。
 
-当前内容：**16 张卡**（15 张原创 + 1 张改编），详见 [sources.md](sources.md)。
+当前内容：**20 张卡**（19 张原创 + 1 张改编），详见 [sources.md](sources.md)。
+其中 **4 张是「人格卡」**（AI 该是什么样的人：直话直说的搭子 / 严格的评审 / 陪你想清楚 / 松弛又靠得住），
+其余是工程纪律卡（一类工作里反复值得坚持的规矩）—— 两类都用同一条通道注入，都是逐条可勾选的契约。
 
 ## 目录
 
@@ -60,7 +62,7 @@ node check.mjs --harness /path/to/whale-persona       # 同上，参数形式
 ```
 
 引擎路径三级解析：`WHALE_HARNESS` 环境变量 → `--harness` 参数 → 已安装插件
-（`$DSH_HOME/profiles/*/node_modules/@shenA2024/whale-persona`）；三级都拿不到就明确报错，不猜。
+（`$DSH_HOME/profiles/*/node_modules/whale-persona`；0.15.0 之前的包名 `@shenA2024/whale-persona` 也认）；三级都拿不到就明确报错，不猜。
 自检会真的调用引擎的 `scripts/presets.mjs import`（在临时 DSH_HOME 里跑，不碰你的配置）。
 **没跑过自检的卡不入库** —— "看起来对"不算数。
 
